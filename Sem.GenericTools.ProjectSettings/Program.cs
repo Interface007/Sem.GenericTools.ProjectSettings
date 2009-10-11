@@ -38,7 +38,8 @@ namespace Sem.GenericTools.ProjectSettings
                 { "Constants", NodeDescription.FromElementNameInPropertyGroup("DefineConstants") }, 
                 { "DebugType", NodeDescription.FromElementNameInPropertyGroup("DebugType") }, 
                 { "RunCode-Analysis", NodeDescription.FromElementNameInPropertyGroup("RunCodeAnalysis") }, 
-                { "Optimize", NodeDescription.FromElementNameInPropertyGroup("Optimize") },                  
+                { "Optimize", NodeDescription.FromElementNameInPropertyGroup("Optimize") },
+                { "DocumentationFile", NodeDescription.FromElementNameInPropertyGroup("DocumentationFile") },
             };
 
         /// <summary>
