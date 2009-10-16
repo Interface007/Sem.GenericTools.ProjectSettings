@@ -122,7 +122,7 @@ namespace Sem.GenericTools.ProjectSettings
 
                     for (var i = 1; i < headers.Length; i++)
                     {
-                        if (string.IsNullOrEmpty(columns[i]))
+                        if (columns.Length <= i || string.IsNullOrEmpty(columns[i]))
                         {
                             continue;
                         }
@@ -158,7 +158,14 @@ namespace Sem.GenericTools.ProjectSettings
 
                     if (changeApplied)
                     {
-                        projectSettings.Save(columns[0]);
+                        try
+                        {
+                            projectSettings.Save(columns[0]);
+                        }
+                        catch (UnauthorizedAccessException ex)
+                        {
+                            Console.WriteLine("access denied: " + columns[0].Replace(rootFolderPath, string.Empty));
+                        }
                     }
                 }
             }
