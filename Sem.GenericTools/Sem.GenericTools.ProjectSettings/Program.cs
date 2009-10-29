@@ -40,6 +40,10 @@ namespace Sem.GenericTools.ProjectSettings
                 { "RunCode-Analysis", NodeDescription.FromElementNameInPropertyGroup("RunCodeAnalysis") }, 
                 { "Optimize", NodeDescription.FromElementNameInPropertyGroup("Optimize") },
                 { "DocumentationFile", NodeDescription.FromElementNameInPropertyGroup("DocumentationFile") },
+                { "PlatformTarget", NodeDescription.FromElementNameInPropertyGroup("PlatformTarget") },
+                { "CodeAnalysisUseTypeNameInSuppression", NodeDescription.FromElementNameInPropertyGroup("CodeAnalysisUseTypeNameInSuppression") },
+                { "CodeAnalysisModuleSuppressionsFile", NodeDescription.FromElementNameInPropertyGroup("CodeAnalysisModuleSuppressionsFile") },
+                { "ErrorReport", NodeDescription.FromElementNameInPropertyGroup("ErrorReport") },
             };
 
         /// <summary>
@@ -162,7 +166,7 @@ namespace Sem.GenericTools.ProjectSettings
                         {
                             projectSettings.Save(columns[0]);
                         }
-                        catch (UnauthorizedAccessException ex)
+                        catch (UnauthorizedAccessException)
                         {
                             Console.WriteLine("access denied: " + columns[0].Replace(rootFolderPath, string.Empty));
                         }
@@ -264,7 +268,7 @@ namespace Sem.GenericTools.ProjectSettings
                 {
                     var projectSettings = GetProjectSettings(projectFile);
                     var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
-                    
+
                     outStream.Write(projectFile + ";");
                     foreach (var selector in Selectors)
                     {
