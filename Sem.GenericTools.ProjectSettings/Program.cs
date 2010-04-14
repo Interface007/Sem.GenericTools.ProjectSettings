@@ -15,7 +15,9 @@ namespace Sem.GenericTools.ProjectSettings
     using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
+    using System.IO.Compression;
     using System.Reflection;
+    using System.Text;
     using System.Xml;
 
     /// <summary>
@@ -44,6 +46,7 @@ namespace Sem.GenericTools.ProjectSettings
                 { "CodeAnalysisUseTypeNameInSuppression", NodeDescription.FromElementNameInPropertyGroup("CodeAnalysisUseTypeNameInSuppression") },
                 { "CodeAnalysisModuleSuppressionsFile", NodeDescription.FromElementNameInPropertyGroup("CodeAnalysisModuleSuppressionsFile") },
                 { "ErrorReport", NodeDescription.FromElementNameInPropertyGroup("ErrorReport") },
+                { "CodeAnalysisRules", NodeDescription.FromElementNameInPropertyGroup("CodeAnalysisRules") },
             };
 
         /// <summary>
@@ -65,6 +68,8 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
+            rootFolderPath = @"C:\ENTWICKLUNG\Evatom\2010_04_Dreba_REL\EvaTom.NET";
+
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
             if (nameIndex > -1)
@@ -152,12 +157,15 @@ namespace Sem.GenericTools.ProjectSettings
                             }
                         }
 
-                        var valueText = columns[i].Replace("+", ";");
-                        if (value != null && value.InnerText != valueText)
+                        var valueText = columns[i];
+                        valueText = DecodeValueText(valueText);
+                        if (value == null || value.InnerText == valueText)
                         {
-                            value.InnerText = valueText;
-                            changeApplied = true;
+                            continue;
                         }
+
+                        value.InnerText = valueText;
+                        changeApplied = true;
                     }
 
                     if (changeApplied)
@@ -173,6 +181,20 @@ namespace Sem.GenericTools.ProjectSettings
                     }
                 }
             }
+        }
+
+        private static string DecodeValueText(string valueText)
+        {
+            valueText = valueText.Replace("{semicolon}", ";");
+            if (valueText.StartsWith("{compressed}"))
+            {
+                if (valueText.EndsWith("{compressed}"))
+                {
+                    valueText = Decompress(valueText.Substring(12, valueText.Length - 24));
+                }
+            }
+
+            return valueText.Replace("{semicolon}", ";");
         }
 
         /// <summary>
@@ -203,8 +225,34 @@ namespace Sem.GenericTools.ProjectSettings
                 }
 
                 var localSelector = GetFragment(ref selectorString, "/");
-                node = node.SelectSingleNode(localSelector, nameSpaceManager) ??
-                       node.AppendChild(selector.DefaultContent[index].Invoke(document, defaultNodeParameter));
+                var parentNode = node;
+
+                // try to get the node
+                node = node.SelectSingleNode(localSelector, nameSpaceManager);
+
+                if (node == null)
+                {
+                    // we don't have that node, so we need to create it
+                    var nodeInserted = false;
+
+                    // check for the special case of a property group for a new build type
+                    if (localSelector.StartsWith("cs:PropertyGroup[@Condition="))
+                    {
+                        // in this case we need to create the new node at the end of the last PropertyGroup node
+                        var nodeBefore = parentNode.SelectSingleNode("cs:PropertyGroup[last()]", nameSpaceManager);
+                        if (nodeBefore != null)
+                        {
+                            // we have found the "previous" node, so we can insert just after that node
+                            node = parentNode.InsertAfter(selector.DefaultContent[index].Invoke(document, defaultNodeParameter), nodeBefore);
+                            nodeInserted = true;
+                        }
+                    }
+
+                    if (!nodeInserted)
+                    {
+                        node = parentNode.AppendChild(selector.DefaultContent[index].Invoke(document, defaultNodeParameter)); 
+                    }
+                }
 
                 index++;
             }
@@ -249,14 +297,14 @@ namespace Sem.GenericTools.ProjectSettings
                 {
                     if (!selector.Value.XPathSelector.Contains("{0}"))
                     {
-                        outStream.Write(selector.Key.Replace(';', '+'));
+                        outStream.Write(selector.Key.Replace(";", "{semicolon}"));
                         outStream.Write(";");
                     }
                     else
                     {
                         foreach (var config in ConfigurationConditions)
                         {
-                            outStream.Write((selector.Key + "..." + config.Key).Replace(';', '+'));
+                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", "{semicolon}"));
                             outStream.Write(";");
                         }
                     }
@@ -274,17 +322,15 @@ namespace Sem.GenericTools.ProjectSettings
                     {
                         if (!selector.Value.XPathSelector.Contains("{0}"))
                         {
-                            var value = projectSettings.SelectSingleNode(selector.Value.XPathSelector, namespaceManager);
-                            outStream.Write(value != null ? value.InnerXml.Replace(';', '+') : string.Empty);
-                            outStream.Write(";");
+                            var selectorXPath = selector.Value.XPathSelector;
+                            CopyValueToStream(outStream, projectSettings, namespaceManager, selectorXPath);
                         }
                         else
                         {
                             foreach (var config in ConfigurationConditions)
                             {
-                                var value = projectSettings.SelectSingleNode(string.Format(CultureInfo.CurrentCulture, selector.Value.XPathSelector, config.Value), namespaceManager);
-                                outStream.Write(value != null ? value.InnerXml.Replace(';', '+') : string.Empty);
-                                outStream.Write(";");
+                                var selectorXPath = string.Format(CultureInfo.CurrentCulture, selector.Value.XPathSelector, config.Value);
+                                CopyValueToStream(outStream, projectSettings, namespaceManager, selectorXPath);
                             }
                         }
                     }
@@ -294,6 +340,27 @@ namespace Sem.GenericTools.ProjectSettings
 
                 outStream.Close();
             }
+        }
+
+        private static void CopyValueToStream(TextWriter outStream, XmlNode projectSettings, XmlNamespaceManager namespaceManager, string selectorXPath)
+        {
+            var value = projectSettings.SelectSingleNode(selectorXPath, namespaceManager);
+            var valueString = value != null ? value.InnerXml: string.Empty;
+            if (valueString.Replace(";", "{semicolon}").Length > 200)
+            {
+                var isok = valueString == DecodeValueText("{compressed}" + Compress(valueString) + "{compressed}");
+                if (!isok)
+                {
+                    throw new InvalidOperationException("the value  cannot be saved as a compressed string");
+                }
+
+                valueString = "{compressed}" + Compress(valueString) + "{compressed}";
+            }
+
+            valueString = valueString.Replace(";", "{semicolon}");
+
+            outStream.Write(valueString);
+            outStream.Write(";");
         }
 
         /// <summary>
@@ -306,6 +373,45 @@ namespace Sem.GenericTools.ProjectSettings
             var projectSettings = new XmlDocument();
             projectSettings.Load(projectFile);
             return projectSettings;
+        }
+
+        public static string Compress(string text)
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes(text);
+            MemoryStream ms = new MemoryStream();
+            using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
+            {
+                zip.Write(buffer, 0, buffer.Length);
+            }
+
+            ms.Position = 0;
+
+            byte[] compressed = new byte[ms.Length];
+            ms.Read(compressed, 0, compressed.Length);
+
+            byte[] gzBuffer = new byte[compressed.Length + 4];
+            System.Buffer.BlockCopy(compressed, 0, gzBuffer, 4, compressed.Length);
+            System.Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gzBuffer, 0, 4);
+            return Convert.ToBase64String(gzBuffer);
+        }
+
+        public static string Decompress(string compressedText)
+        {
+            byte[] gzBuffer = Convert.FromBase64String(compressedText);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                int msgLength = BitConverter.ToInt32(gzBuffer, 0);
+                ms.Write(gzBuffer, 4, gzBuffer.Length - 4);
+
+                byte[] buffer = new byte[msgLength];
+
+                ms.Position = 0;
+                using (GZipStream zip = new GZipStream(ms, CompressionMode.Decompress))
+                {
+                    zip.Read(buffer, 0, buffer.Length);
+                }
+                return Encoding.UTF8.GetString(buffer);
+            }
         }
     }
 }
