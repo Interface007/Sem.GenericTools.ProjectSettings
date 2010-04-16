@@ -16,6 +16,7 @@ namespace Sem.GenericTools.ProjectSettings
     using System.Globalization;
     using System.IO;
     using System.IO.Compression;
+    using System.Linq;
     using System.Reflection;
     using System.Text;
     using System.Xml;
@@ -68,7 +69,6 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
-            rootFolderPath = @"C:\CodePlex";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
@@ -168,6 +168,8 @@ namespace Sem.GenericTools.ProjectSettings
                         changeApplied = true;
                     }
 
+                    changeApplied |= CheckOrderOfElements(projectSettings, namespaceManager);
+
                     if (changeApplied)
                     {
                         try
@@ -187,6 +189,26 @@ namespace Sem.GenericTools.ProjectSettings
                     }
                 }
             }
+        }
+
+        private static bool CheckOrderOfElements(XmlDocument projectSettings, XmlNamespaceManager namespaceManager)
+        {
+            var nodes = projectSettings.SelectNodes("//cs:PropertyGroup[@Condition]", namespaceManager);
+
+            if (nodes == null)
+            {
+                return false;
+            }
+            
+            var result = false;
+            var xmlNodes = nodes.Cast<XmlNode>().Where(node => node.PreviousSibling != null && node.PreviousSibling.Name != "PropertyGroup");
+            foreach (XmlNode node in xmlNodes)
+            {
+                Console.WriteLine("issue found");
+                result = true;
+            }
+            
+            return result;
         }
 
         private static string DecodeValueText(string valueText)
@@ -256,7 +278,7 @@ namespace Sem.GenericTools.ProjectSettings
 
                     if (!nodeInserted)
                     {
-                        node = parentNode.AppendChild(selector.DefaultContent[index].Invoke(document, defaultNodeParameter)); 
+                        node = parentNode.AppendChild(selector.DefaultContent[index].Invoke(document, defaultNodeParameter));
                     }
                 }
 
@@ -351,7 +373,7 @@ namespace Sem.GenericTools.ProjectSettings
         private static void CopyValueToStream(TextWriter outStream, XmlNode projectSettings, XmlNamespaceManager namespaceManager, string selectorXPath)
         {
             var value = projectSettings.SelectSingleNode(selectorXPath, namespaceManager);
-            var valueString = value != null ? value.InnerXml: string.Empty;
+            var valueString = value != null ? value.InnerXml : string.Empty;
             if (valueString.Replace(";", "{semicolon}").Length > 200)
             {
                 var isok = valueString == DecodeValueText("{compressed}" + Compress(valueString) + "{compressed}");
