@@ -68,7 +68,8 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
-            
+            rootFolderPath = @"C:\CodePlex";
+
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
             if (nameIndex > -1)
@@ -171,6 +172,12 @@ namespace Sem.GenericTools.ProjectSettings
                     {
                         try
                         {
+                            var fileAttributes = File.GetAttributes(columns[0]);
+                            if ((fileAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                            {
+                                File.SetAttributes(columns[0], fileAttributes ^ FileAttributes.ReadOnly);
+                            }
+
                             projectSettings.Save(columns[0]);
                         }
                         catch (UnauthorizedAccessException)
