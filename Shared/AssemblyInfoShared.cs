@@ -18,9 +18,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyCompany("Sven Erik Matzen")]
 [assembly: AssemblyProduct("Sem Sync")]
-[assembly: AssemblyCopyright("Copyright © 2009")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCopyright("Copyright © 2010")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -29,8 +27,8 @@ using System.Runtime.InteropServices;
 
 [assembly: CLSCompliant(false)]
 
-[assembly: AssemblyVersion("2009.05.22.003")]
+[assembly: AssemblyVersion("2010.04.28.004")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
-[assembly: NeutralResourcesLanguage("en-US", UltimateResourceFallbackLocation.MainAssembly)]
+[assembly: NeutralResourcesLanguage("en", UltimateResourceFallbackLocation.MainAssembly)]
 
