@@ -70,7 +70,6 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
-            rootFolderPath = @"C:\ENTWICKLUNG\Evatom\2010_04_Dreba_REL\EvaTom.NET";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
