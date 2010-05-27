@@ -37,11 +37,11 @@
   <ItemGroup>
     <Reference Include="FxCopSdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\ENTWICKLUNG\Evatom\Tools\CodeQualityTools\CAExtensions\CAExtensions\Dependencies\FxCopSdk.dll</HintPath>
+      <HintPath>Dependencies\FxCopSdk.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Cci, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\ENTWICKLUNG\Evatom\Tools\CodeQualityTools\CAExtensions\CAExtensions\Dependencies\Microsoft.Cci.dll</HintPath>
+      <HintPath>Dependencies\Microsoft.Cci.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -71,6 +71,12 @@
     <CodeAnalysisDictionary Include="..\Shared\CustomDictionary.xml">
       <Link>Properties\CustomDictionary.xml</Link>
     </CodeAnalysisDictionary>
+    <Content Include="Dependencies\FxCopSdk.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Dependencies\Microsoft.Cci.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
