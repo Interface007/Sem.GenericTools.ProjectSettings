@@ -58,6 +58,7 @@ namespace Sem.GenericTools.ProjectSettings
                 { "default", @"'$(Configuration)' == ''" },
                 { "debug", @"'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'" },
                 { "release", @"'$(Configuration)|$(Platform)' == 'Release|AnyCPU'" },
+                { "documentation", @"'$(Configuration)|$(Platform)' == 'Documentation|AnyCPU'" },
                 { "ca-build", @"'$(Configuration)|$(Platform)' == 'Debug %28CodeAnalysis%29|AnyCPU'" },
                 { "ca build", @"'$(Configuration)|$(Platform)' == 'Debug %28Code Analysis%29|AnyCPU'" },
                 { "exclude non standard", @"'$(Configuration)|$(Platform)' == 'Exclude Non-Standard-Projects|AnyCPU'" },
@@ -69,6 +70,7 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
+            rootFolderPath = @"C:\ENTWICKLUNG\Evatom\2010_04_Dreba_REL\EvaTom.NET";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
@@ -83,25 +85,36 @@ namespace Sem.GenericTools.ProjectSettings
                 Console.WriteLine("(O)pen file in standard program for *.CSV");
                 Console.WriteLine("(W)rite settings from CSV to project files");
                 Console.WriteLine("(E)xit program");
+                
                 var input = (Console.ReadLine() ?? string.Empty).ToUpperInvariant();
-                switch (input)
+                if (Execute(rootFolderPath, input))
                 {
-                    case "C":
-                        CopyProjectFilesToCsv(rootFolderPath);
-                        break;
-
-                    case "O":
-                        System.Diagnostics.Process.Start(Path.Combine(rootFolderPath, "projectsettings.csv"));
-                        break;
-
-                    case "W":
-                        CopyCsvToProjectFiles(rootFolderPath);
-                        break;
-
-                    case "E":
-                        return;
+                    return;
                 }
             }
+        }
+
+        public static bool Execute(string rootFolderPath, string input)
+        {
+            switch (input)
+            {
+                case "C":
+                    CopyProjectFilesToCsv(rootFolderPath);
+                    return true;
+
+                case "O":
+                    System.Diagnostics.Process.Start(Path.Combine(rootFolderPath, "projectsettings.csv"));
+                    return true;
+
+                case "W":
+                    CopyCsvToProjectFiles(rootFolderPath);
+                    return true;
+
+                case "E":
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -131,7 +144,7 @@ namespace Sem.GenericTools.ProjectSettings
 
                     for (var i = 1; i < headers.Length; i++)
                     {
-                        if (columns.Length <= i || string.IsNullOrEmpty(columns[i]))
+                        if (columns.Length <= i)
                         {
                             continue;
                         }
@@ -147,6 +160,18 @@ namespace Sem.GenericTools.ProjectSettings
                         }
 
                         var value = projectSettings.SelectSingleNode(selector.ProcessedSelector(parameter), namespaceManager);
+
+                        if (value == null && string.IsNullOrEmpty(columns[i]))
+                        {
+                            continue;
+                        }
+
+                        if (value != null && string.IsNullOrEmpty(columns[i]))
+                        {
+                            value.InnerText = string.Empty;
+                            changeApplied = true;
+                            continue;
+                        }
 
                         if (value == null)
                         {

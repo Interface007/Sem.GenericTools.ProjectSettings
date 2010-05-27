@@ -3,15 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sem.GenericTools.ProjectSettings", "Sem.GenericTools.ProjectSettings\Sem.GenericTools.ProjectSettings.csproj", "{4595B0B3-0182-451C-A4CD-415377193307}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sem.GenericTools.CodeAnalysis", "Sem.GenericTools.CodeAnalysis\Sem.GenericTools.CodeAnalysis.csproj", "{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
+		SccNumberOfProjects = 3
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs06.codeplex.com/
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = Sem.GenericTools.ProjectSettings\\Sem.GenericTools.ProjectSettings.csproj
 		SccProjectName1 = Sem.GenericTools.ProjectSettings
 		SccLocalPath1 = Sem.GenericTools.ProjectSettings
+		SccProjectUniqueName2 = Sem.GenericTools.CodeAnalysis\\Sem.GenericTools.CodeAnalysis.csproj
+		SccProjectName2 = Sem.GenericTools.CodeAnalysis
+		SccLocalPath2 = Sem.GenericTools.CodeAnalysis
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug (Code Analysis)|Any CPU = Debug (Code Analysis)|Any CPU
@@ -28,6 +33,14 @@ Global
 		{4595B0B3-0182-451C-A4CD-415377193307}.Exclude Non-Standard-Projects|Any CPU.Build.0 = Exclude Non-Standard-Projects|Any CPU
 		{4595B0B3-0182-451C-A4CD-415377193307}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4595B0B3-0182-451C-A4CD-415377193307}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Debug (Code Analysis)|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Debug (Code Analysis)|Any CPU.Build.0 = Debug|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Exclude Non-Standard-Projects|Any CPU.ActiveCfg = Release|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Exclude Non-Standard-Projects|Any CPU.Build.0 = Release|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
