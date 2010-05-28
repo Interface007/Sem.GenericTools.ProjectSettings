@@ -4,6 +4,8 @@
 
     public abstract class SemRule : BaseIntrospectionRule
     {
+        public static int counter;
+
         protected SemRule(string name)
             : base(
                 name,                                                                   // The name of the rule (must match the entry in the Rules.XML)
@@ -16,20 +18,21 @@
         /// Adds a problem to the ProblemList. 
         /// Certainty, FixCategory and messageLevel are set automatically.
         /// </summary>
-        /// <param name="name">the Name of the Faulting thing</param>
-        /// <param name="target">the Node of the Thing that has caused the error</param>
-        protected void AddProblem(string name, Node target)
+        /// <param name="faultyElement">the name of the fault causing element</param>
+        /// <param name="target">the node of the element that has caused the error</param>
+        protected void AddProblem(string faultyElement, Node target)
         {
-            // Get the Resolution - the Messagetext that is shown in the Error-List in VS. 
-            // Works like string.Format and inserts the given name into the Errortext defined in the Rules.xml
-            var resolution = GetResolution(name);
-            
+            // Get the message text that is shown in the error-list. 
+            // Works like string.Format and inserts the given faulty element string into 
+            // the error text defined in the Rules.xml
+            var resolution = GetResolution(faultyElement);
+
             // Create a new Problem with the resolution and the target node given
             var problem = new Problem(resolution, target)
             {
                 Certainty = 100,
                 FixCategory = FixCategories.NonBreaking,
-                MessageLevel = MessageLevel.Warning
+                MessageLevel = MessageLevel.Warning,
             };
 
             // Add the Problem to the Problemlist
