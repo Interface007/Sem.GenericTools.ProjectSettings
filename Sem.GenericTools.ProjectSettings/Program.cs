@@ -28,6 +28,10 @@ namespace Sem.GenericTools.ProjectSettings
     /// </summary>
     internal class Program
     {
+        private const string escapedSemicolon = "{semicolon}";
+
+        private const string magicStringCompressed = "{compressed}";
+
         /// <summary>
         /// contains the xpath selectors to extract project data
         /// </summary>
@@ -70,6 +74,7 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
+            rootFolderPath = @"C:\CodePlex\SemSync\VS2010";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
@@ -226,7 +231,7 @@ namespace Sem.GenericTools.ProjectSettings
             
             var result = false;
             var xmlNodes = nodes.Cast<XmlNode>().Where(node => node.PreviousSibling != null && node.PreviousSibling.Name != "PropertyGroup");
-            foreach (XmlNode node in xmlNodes)
+            foreach (var node in xmlNodes)
             {
                 Console.WriteLine("issue found");
                 result = true;
@@ -237,16 +242,16 @@ namespace Sem.GenericTools.ProjectSettings
 
         private static string DecodeValueText(string valueText)
         {
-            valueText = valueText.Replace("{semicolon}", ";");
-            if (valueText.StartsWith("{compressed}"))
+            valueText = valueText.Replace(escapedSemicolon, ";");
+            if (valueText.StartsWith(magicStringCompressed))
             {
-                if (valueText.EndsWith("{compressed}"))
+                if (valueText.EndsWith(magicStringCompressed))
                 {
                     valueText = Decompress(valueText.Substring(12, valueText.Length - 24));
                 }
             }
 
-            return valueText.Replace("{semicolon}", ";");
+            return valueText.Replace(escapedSemicolon, ";");
         }
 
         /// <summary>
@@ -349,14 +354,14 @@ namespace Sem.GenericTools.ProjectSettings
                 {
                     if (!selector.Value.XPathSelector.Contains("{0}"))
                     {
-                        outStream.Write(selector.Key.Replace(";", "{semicolon}"));
+                        outStream.Write(selector.Key.Replace(";", escapedSemicolon));
                         outStream.Write(";");
                     }
                     else
                     {
                         foreach (var config in ConfigurationConditions)
                         {
-                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", "{semicolon}"));
+                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", escapedSemicolon));
                             outStream.Write(";");
                         }
                     }
@@ -398,18 +403,18 @@ namespace Sem.GenericTools.ProjectSettings
         {
             var value = projectSettings.SelectSingleNode(selectorXPath, namespaceManager);
             var valueString = value != null ? value.InnerXml : string.Empty;
-            if (valueString.Replace(";", "{semicolon}").Length > 200)
+            if (valueString.Replace(";", escapedSemicolon).Length > 200)
             {
-                var isok = valueString == DecodeValueText("{compressed}" + Compress(valueString) + "{compressed}");
+                var isok = valueString == DecodeValueText(magicStringCompressed + Compress(valueString) + magicStringCompressed);
                 if (!isok)
                 {
                     throw new InvalidOperationException("the value  cannot be saved as a compressed string");
                 }
 
-                valueString = "{compressed}" + Compress(valueString) + "{compressed}";
+                valueString = magicStringCompressed + Compress(valueString) + magicStringCompressed;
             }
 
-            valueString = valueString.Replace(";", "{semicolon}");
+            valueString = valueString.Replace(";", escapedSemicolon);
 
             outStream.Write(valueString);
             outStream.Write(";");
@@ -429,39 +434,40 @@ namespace Sem.GenericTools.ProjectSettings
 
         public static string Compress(string text)
         {
-            byte[] buffer = Encoding.UTF8.GetBytes(text);
-            MemoryStream ms = new MemoryStream();
-            using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
+            var buffer = Encoding.UTF8.GetBytes(text);
+            var ms = new MemoryStream();
+            using (var zip = new GZipStream(ms, CompressionMode.Compress, true))
             {
                 zip.Write(buffer, 0, buffer.Length);
             }
 
             ms.Position = 0;
 
-            byte[] compressed = new byte[ms.Length];
+            var compressed = new byte[ms.Length];
             ms.Read(compressed, 0, compressed.Length);
 
-            byte[] gzBuffer = new byte[compressed.Length + 4];
-            System.Buffer.BlockCopy(compressed, 0, gzBuffer, 4, compressed.Length);
-            System.Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gzBuffer, 0, 4);
-            return Convert.ToBase64String(gzBuffer);
+            var compressionBuffer = new byte[compressed.Length + 4];
+            Buffer.BlockCopy(compressed, 0, compressionBuffer, 4, compressed.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, compressionBuffer, 0, 4);
+            return Convert.ToBase64String(compressionBuffer);
         }
 
         public static string Decompress(string compressedText)
         {
-            byte[] gzBuffer = Convert.FromBase64String(compressedText);
-            using (MemoryStream ms = new MemoryStream())
+            var compressionBuffer = Convert.FromBase64String(compressedText);
+            using (var ms = new MemoryStream())
             {
-                int msgLength = BitConverter.ToInt32(gzBuffer, 0);
-                ms.Write(gzBuffer, 4, gzBuffer.Length - 4);
+                var msgLength = BitConverter.ToInt32(compressionBuffer, 0);
+                ms.Write(compressionBuffer, 4, compressionBuffer.Length - 4);
 
-                byte[] buffer = new byte[msgLength];
+                var buffer = new byte[msgLength];
 
                 ms.Position = 0;
-                using (GZipStream zip = new GZipStream(ms, CompressionMode.Decompress))
+                using (var zip = new GZipStream(ms, CompressionMode.Decompress))
                 {
                     zip.Read(buffer, 0, buffer.Length);
                 }
+
                 return Encoding.UTF8.GetString(buffer);
             }
         }
