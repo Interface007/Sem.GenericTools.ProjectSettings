@@ -56,6 +56,8 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
             var checkedParameters = new List<string>();
             var enumerator = method.Instructions.GetEnumerator();
 
+            var isStatic = method.DeclaringType.IsStatic;
+
             var parameterName = string.Empty;
             while (enumerator.MoveNext())
             {
@@ -70,19 +72,19 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
                         break;
 
                     case OpCode.Ldarg_0:
-                        parameterName = GetParameterName(parameterCollection, 0);
+                        parameterName = GetParameterName(parameterCollection, 0, isStatic);
                         break;
 
                     case OpCode.Ldarg_1:
-                        parameterName = GetParameterName(parameterCollection, 1);
+                        parameterName = GetParameterName(parameterCollection, 1, isStatic);
                         break;
 
                     case OpCode.Ldarg_2:
-                        parameterName = GetParameterName(parameterCollection, 2);
+                        parameterName = GetParameterName(parameterCollection, 2, isStatic);
                         break;
 
                     case OpCode.Ldarg_3:
-                        parameterName = GetParameterName(parameterCollection, 3);
+                        parameterName = GetParameterName(parameterCollection, 3, isStatic);
                         break;
 
                     case OpCode.Ldarg_S:
@@ -107,10 +109,10 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
             return checkedParameters;
         }
 
-        private static string GetParameterName(ParameterCollection parameterCollection, int index)
+        private static string GetParameterName(ParameterCollection parameterCollection, int index, bool isStatic)
         {
             return 
-                parameterCollection.Count > index 
+                parameterCollection.Count > (isStatic ? index : index + 1)
                 ? parameterCollection[index].Name.Name 
                 : "(undefined)";
         }
