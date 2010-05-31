@@ -65,7 +65,6 @@
             {
                 var current = enumerator.Current;
                 var parameterCollection = method.Parameters;
-                Console.WriteLine("OpCode: " + current.OpCode);
                 
                 switch (current.OpCode)
                 {
@@ -76,28 +75,23 @@
 
                     case OpCode.Ldarg_0:
                         parameterName = GetParameterName(parameterCollection, 0, isStatic);
-                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_1:
                         parameterName = GetParameterName(parameterCollection, 1, isStatic);
-                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_2:
                         parameterName = GetParameterName(parameterCollection, 2, isStatic);
-                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_3:
                         parameterName = GetParameterName(parameterCollection, 3, isStatic);
-                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_S:
                         var parameter = (Parameter)current.Value;
                         parameterName = parameter.Name.Name;
-                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Call:
@@ -134,12 +128,6 @@
                 || 
                 (declaringType.BaseType != null
                 && declaringType.BaseType.FullName.EndsWith(".GuardClass"));
-        }
-
-        public override void AfterAnalysis()
-        {
-            Console.ReadLine();
-            base.AfterAnalysis();
         }
     }
 }
