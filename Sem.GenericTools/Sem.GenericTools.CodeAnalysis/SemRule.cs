@@ -1,11 +1,26 @@
-﻿namespace Sem.GenericTools.CodeAnalysis
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SemRule.cs" company="Sven Erik Matzen">
+//   Copyright (c) Sven Erik Matzen. GNU Library General Public License (LGPL) Version 2.1.
+// </copyright>
+// <summary>
+//   Defines the SemRule type.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Sem.GenericTools.CodeAnalysis
 {
     using Microsoft.FxCop.Sdk;
 
+    /// <summary>
+    /// implements some bas functionality for rule classes.
+    /// </summary>
     public abstract class SemRule : BaseIntrospectionRule
     {
-        public static int counter;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SemRule"/> class.
+        /// </summary>
+        /// <param name="name"> The name of the class that inherits from this abstract class 
+        /// - that must be the name of the rule, too. </param>
         protected SemRule(string name)
             : base(
                 name,                                                                   // The name of the rule (must match the entry in the Rules.XML)

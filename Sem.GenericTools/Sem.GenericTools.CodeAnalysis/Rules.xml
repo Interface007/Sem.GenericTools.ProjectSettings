@@ -10,4 +10,14 @@
     <Email />
     <Owner />
   </Rule>
+  <Rule TypeName="ToStringMustNotBeCalledForStringObjects" Category="BestPractice.Performance" CheckId="SEM2001">
+    <Name>ToStringMustNotBeCalledForStringObjects</Name>
+    <Description>Calling the ToString-Method for a string does make no sense. It only generates memory stress by allocating a new buffer for the string.</Description>
+    <Url></Url>
+    <Resolution>Remove the call to "ToString()".</Resolution>
+    <MessageLevel Certainty="95">Warning</MessageLevel>
+    <FixCategories>NonBreaking</FixCategories>
+    <Email />
+    <Owner />
+  </Rule>
 </Rules>
