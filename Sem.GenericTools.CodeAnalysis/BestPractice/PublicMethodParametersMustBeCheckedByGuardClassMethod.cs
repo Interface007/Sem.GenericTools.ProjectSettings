@@ -1,10 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-
-namespace Sem.GenericTools.CodeAnalysis.BestPractice
+﻿namespace Sem.GenericTools.CodeAnalysis.BestPractice
 {
+    using System;
     using System.Collections.Generic;
-
     using Microsoft.FxCop.Sdk;
 
     public class PublicMethodParametersMustBeCheckedByGuardClassMethod : SemRule
@@ -23,6 +20,11 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
             }
 
             if (method.DeclaringType.DeclaringModule.ContainingAssembly == FrameworkAssemblies.Mscorlib)
+            {
+                return null;
+            }
+
+            if (IsGuardClass(method.DeclaringType))
             {
                 return null;
             }
@@ -56,14 +58,15 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
             var checkedParameters = new List<string>();
             var enumerator = method.Instructions.GetEnumerator();
 
-            var isStatic = method.DeclaringType.IsStatic;
+            var isStatic = method.IsStatic;
 
             var parameterName = string.Empty;
             while (enumerator.MoveNext())
             {
                 var current = enumerator.Current;
                 var parameterCollection = method.Parameters;
-
+                Console.WriteLine("OpCode: " + current.OpCode);
+                
                 switch (current.OpCode)
                 {
                     case OpCode.Nop:
@@ -73,23 +76,28 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
 
                     case OpCode.Ldarg_0:
                         parameterName = GetParameterName(parameterCollection, 0, isStatic);
+                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_1:
                         parameterName = GetParameterName(parameterCollection, 1, isStatic);
+                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_2:
                         parameterName = GetParameterName(parameterCollection, 2, isStatic);
+                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_3:
                         parameterName = GetParameterName(parameterCollection, 3, isStatic);
+                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Ldarg_S:
                         var parameter = (Parameter)current.Value;
                         parameterName = parameter.Name.Name;
+                        Console.WriteLine("Parameter: " + parameterName);
                         break;
 
                     case OpCode.Call:
@@ -111,15 +119,27 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
 
         private static string GetParameterName(ParameterCollection parameterCollection, int index, bool isStatic)
         {
-            return 
-                parameterCollection.Count > (isStatic ? index : index + 1)
-                ? parameterCollection[index].Name.Name 
+            var listIndex = isStatic ? index : index - 1;
+            
+            return
+                parameterCollection.Count > listIndex && listIndex > -1
+                ? parameterCollection[listIndex].Name.Name 
                 : "(undefined)";
         }
 
         private static bool IsGuardClass(TypeNode declaringType)
         {
-            return declaringType.FullName.Contains("Guard");
+            return
+                declaringType.FullName.EndsWith(".GuardClass")
+                || 
+                (declaringType.BaseType != null
+                && declaringType.BaseType.FullName.EndsWith(".GuardClass"));
+        }
+
+        public override void AfterAnalysis()
+        {
+            Console.ReadLine();
+            base.AfterAnalysis();
         }
     }
 }
