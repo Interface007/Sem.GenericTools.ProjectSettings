@@ -10,6 +10,7 @@
 namespace Sem.GenericTools.CodeAnalysis
 {
     using Microsoft.FxCop.Sdk;
+    using Microsoft.VisualStudio.CodeAnalysis.Extensibility;
 
     /// <summary>
     /// implements some bas functionality for rule classes.
