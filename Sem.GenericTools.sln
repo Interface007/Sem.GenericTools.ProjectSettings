@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sem.GenericTools.ProjectSettings", "Sem.GenericTools.ProjectSettings\Sem.GenericTools.ProjectSettings.csproj", "{4595B0B3-0182-451C-A4CD-415377193307}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sem.GenericTools.CodeAnalysis", "Sem.GenericTools.CodeAnalysis\Sem.GenericTools.CodeAnalysis.csproj", "{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}"
