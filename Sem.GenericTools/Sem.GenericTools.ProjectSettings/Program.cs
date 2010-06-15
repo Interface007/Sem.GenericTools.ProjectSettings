@@ -28,9 +28,9 @@ namespace Sem.GenericTools.ProjectSettings
     /// </summary>
     internal class Program
     {
-        private const string escapedSemicolon = "{semicolon}";
+        private const string EscapedSemicolon = "{semicolon}";
 
-        private const string magicStringCompressed = "{compressed}";
+        private const string MagicStringCompressed = "{compressed}";
 
         /// <summary>
         /// contains the xpath selectors to extract project data
@@ -74,7 +74,6 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
-            rootFolderPath = @"C:\ENTWICKLUNG\Evatom\2010_04_Dreba_REL\EvaTom.NET";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
@@ -146,9 +145,9 @@ namespace Sem.GenericTools.ProjectSettings
                 var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
 
                 var xmlNodeList = projectSettings.SelectNodes(@"//cs:Project/cs:ItemGroup/cs:Reference[starts-with(@Include,'Libra.')]", namespaceManager);
-                foreach (XmlElement node in xmlNodeList)
+                if (xmlNodeList != null)
                 {
-                    if (node.ChildNodes.Count == 0)
+                    foreach (var node in xmlNodeList.Cast<XmlElement>().Where(node => node.ChildNodes.Count == 0))
                     {
                         node.AppendChild(node.OwnerDocument.CreateElement("SpecificVersion", NodeTools.MsbuildNamespace)).InnerText = "False";
                         node.AppendChild(node.OwnerDocument.CreateElement("HintPath", NodeTools.MsbuildNamespace)).InnerText = @"..\Dependencies\" + node.Attributes[0].Value.Replace(", Version=3.4.804.11001, Culture=neutral, PublicKeyToken=e799e8c778d4ffc5, processorArchitecture=MSIL", ".dll");
@@ -169,46 +168,53 @@ namespace Sem.GenericTools.ProjectSettings
 
                 foreach (var projectFile in Directory.GetFiles(rootFolderPath, "*.csproj", SearchOption.AllDirectories))
                 {
-                    var projectSettings = GetProjectSettings(projectFile);
-                    var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
-
-                    var xmlNodeList = projectSettings.SelectNodes(
-                        @"//cs:Project/cs:ItemGroup/cs:Reference", namespaceManager);
-                    if (xmlNodeList != null)
-                    {
-                        foreach (XmlElement node in xmlNodeList)
-                        {
-                            var specificVersionNode = node.SelectSingleNode("cs:SpecificVersion", namespaceManager);
-                            var hintPathNode = node.SelectSingleNode("cs:HintPath", namespaceManager);
-
-                            var attributeNode = node.GetAttributeNode("Include");
-                            var referenceInformation = new ReferenceInformation
-                                {
-                                    Target = attributeNode == null ? string.Empty : attributeNode.InnerText,
-                                    SpecificVersion = specificVersionNode == null
-                                                          ? false
-                                                          : bool.Parse(specificVersionNode.InnerText),
-                                    HintPath = hintPathNode == null ? string.Empty : hintPathNode.InnerText,
-                                    Project = projectFile,
-                                };
-
-                            reflist.Add(referenceInformation);
-
-                            var target = 
-                                referenceInformation.Target.Contains(",") 
-                                ? referenceInformation.Target.Substring(0, referenceInformation.Target.IndexOf(",")) 
-                                : referenceInformation.Target;
-
-                            outStream.WriteLine(
-                                referenceInformation.Project + ";" + 
-                                target + ";" +
-                                referenceInformation.HintPath.Replace(@"..\..\..\..\..\WIN2003\", @"..\..\..\..\WIN2003\") + ";" + 
-                                referenceInformation.SpecificVersion);
-                        }
-                    }
+                    CopyReferenceData(rootFolderPath, outStream, projectFile, reflist, @"//cs:Project/cs:ItemGroup/cs:Reference");
+                    CopyReferenceData(rootFolderPath, outStream, projectFile, reflist, @"//cs:Project/cs:ItemGroup/cs:ProjectReference");
                 }
 
                 outStream.Close();
+            }
+        }
+
+        private static void CopyReferenceData(string rootFolderPath, TextWriter outStream, string projectFile, ICollection<ReferenceInformation> reflist, string selector)
+        {
+            var projectSettings = GetProjectSettings(projectFile);
+            var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
+
+            var xmlNodeList = projectSettings.SelectNodes(selector, namespaceManager);
+            if (xmlNodeList == null)
+            {
+                return;
+            }
+
+            foreach (XmlElement node in xmlNodeList)
+            {
+                var specificVersionNode = node.SelectSingleNode("cs:SpecificVersion", namespaceManager);
+                var hintPathNode = node.SelectSingleNode("cs:HintPath", namespaceManager);
+
+                var attributeNode = node.GetAttributeNode("Include");
+                var referenceInformation = new ReferenceInformation
+                    {
+                        Target = attributeNode == null ? string.Empty : attributeNode.InnerText,
+                        SpecificVersion = specificVersionNode == null
+                                              ? false
+                                              : bool.Parse(specificVersionNode.InnerText),
+                        HintPath = hintPathNode == null ? string.Empty : hintPathNode.InnerText,
+                        Project = projectFile,
+                    };
+
+                reflist.Add(referenceInformation);
+
+                var target = 
+                    referenceInformation.Target.Contains(",") 
+                        ? referenceInformation.Target.Substring(0, referenceInformation.Target.IndexOf(",")) 
+                        : referenceInformation.Target;
+
+                outStream.WriteLine(
+                    referenceInformation.Project.Replace(rootFolderPath, string.Empty) + ";" + 
+                    target + ";" +
+                    referenceInformation.HintPath.Replace(@"..\..\..\..\..\WIN2003\", @"..\..\..\..\WIN2003\") + ";" + 
+                    referenceInformation.SpecificVersion);
             }
         }
 
@@ -333,16 +339,16 @@ namespace Sem.GenericTools.ProjectSettings
 
         private static string DecodeValueText(string valueText)
         {
-            valueText = valueText.Replace(escapedSemicolon, ";");
-            if (valueText.StartsWith(magicStringCompressed))
+            valueText = valueText.Replace(EscapedSemicolon, ";");
+            if (valueText.StartsWith(MagicStringCompressed))
             {
-                if (valueText.EndsWith(magicStringCompressed))
+                if (valueText.EndsWith(MagicStringCompressed))
                 {
                     valueText = Decompress(valueText.Substring(12, valueText.Length - 24));
                 }
             }
 
-            return valueText.Replace(escapedSemicolon, ";");
+            return valueText.Replace(EscapedSemicolon, ";");
         }
 
         /// <summary>
@@ -445,14 +451,14 @@ namespace Sem.GenericTools.ProjectSettings
                 {
                     if (!selector.Value.XPathSelector.Contains("{0}"))
                     {
-                        outStream.Write(selector.Key.Replace(";", escapedSemicolon));
+                        outStream.Write(selector.Key.Replace(";", EscapedSemicolon));
                         outStream.Write(";");
                     }
                     else
                     {
                         foreach (var config in ConfigurationConditions)
                         {
-                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", escapedSemicolon));
+                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", EscapedSemicolon));
                             outStream.Write(";");
                         }
                     }
@@ -494,18 +500,18 @@ namespace Sem.GenericTools.ProjectSettings
         {
             var value = projectSettings.SelectSingleNode(selectorXPath, namespaceManager);
             var valueString = value != null ? value.InnerXml : string.Empty;
-            if (valueString.Replace(";", escapedSemicolon).Length > 200)
+            if (valueString.Replace(";", EscapedSemicolon).Length > 200)
             {
-                var isok = valueString == DecodeValueText(magicStringCompressed + Compress(valueString) + magicStringCompressed);
+                var isok = valueString == DecodeValueText(MagicStringCompressed + Compress(valueString) + MagicStringCompressed);
                 if (!isok)
                 {
                     throw new InvalidOperationException("the value  cannot be saved as a compressed string");
                 }
 
-                valueString = magicStringCompressed + Compress(valueString) + magicStringCompressed;
+                valueString = MagicStringCompressed + Compress(valueString) + MagicStringCompressed;
             }
 
-            valueString = valueString.Replace(";", escapedSemicolon);
+            valueString = valueString.Replace(";", EscapedSemicolon);
 
             outStream.Write(valueString);
             outStream.Write(";");
@@ -562,16 +568,5 @@ namespace Sem.GenericTools.ProjectSettings
                 return Encoding.UTF8.GetString(buffer);
             }
         }
-    }
-
-    internal class ReferenceInformation
-    {
-        public string Target { get; set; }
-
-        public bool SpecificVersion { get; set; }
-
-        public string HintPath { get; set; }
-
-        public string Project  { get; set; }
     }
 }
