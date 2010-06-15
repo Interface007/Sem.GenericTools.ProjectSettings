@@ -5,21 +5,17 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7F2A79B2-A0DB-4E0A-9989-B061FB8955E8}</ProjectGuid>
+    <ProjectGuid>{4C04172B-DF97-4EC7-AF84-2CE6C9E20D20}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Sem.GenericTools.CodeAnalysis</RootNamespace>
-    <AssemblyName>Sem.GenericTools.CodeAnalysis</AssemblyName>
+    <RootNamespace>Sem.GenericTools.CodeAnalysis.SpecialStyle</RootNamespace>
+    <AssemblyName>Sem.GenericTools.CodeAnalysis.SpecialStyle</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,9 +25,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>
-    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,17 +33,15 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>..\bin</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FxCopSdk, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\FxCopSdk.dll</HintPath>
+      <HintPath>..\bin\FxCopSdk.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Cci, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\Microsoft.Cci.dll</HintPath>
+      <HintPath>..\bin\Microsoft.Cci.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -69,33 +60,21 @@
     <Compile Include="..\Shared\AssemblyInfoShared.cs">
       <Link>Properties\AssemblyInfoShared.cs</Link>
     </Compile>
-    <Compile Include="Performance\ReturnValuesOfStringMethodsMustBeInterpreted.cs" />
-    <Compile Include="Performance\ToStringMustNotBeCalledForStringObjects.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="BestPractice\PublicMethodParametersMustBeCheckedByGuardClassMethod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SemRule.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Rules.xml" />
   </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDictionary Include="..\Shared\CustomDictionary.xml">
       <Link>Properties\CustomDictionary.xml</Link>
     </CodeAnalysisDictionary>
-    <Content Include="Dependencies\FxCopSdk.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Dependencies\Microsoft.Cci.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Settings.StyleCop" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="BestPractice\" />
+    <Content Include="Readme.txt" />
+    <EmbeddedResource Include="Rules.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

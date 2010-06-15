@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Rules FriendlyName="Sem CodeAnalysis Rules">
+  <Rule TypeName="PublicMethodParametersMustBeCheckedByGuardClassMethod" Category="BestPractice.Robustnes" CheckId="SEM1001">
+    <Name>PublicMethodParametersMustBeCheckedByGuardClassMethod</Name>
+    <Description>All parameters of public members must be checked with a method of a guard class (that class must have the GuardClassAttribute)</Description>
+    <Url></Url>
+    <Resolution>The parameter {0} must be checked for a valid value.</Resolution>
+    <MessageLevel Certainty="95">Warning</MessageLevel>
+    <FixCategories>NonBreaking</FixCategories>
+    <Email />
+    <Owner />
+  </Rule>
+</Rules>

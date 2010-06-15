@@ -1,20 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Rules FriendlyName="Sem CodeAnalysis Rules">
-  <Rule TypeName="PublicMethodParametersMustBeCheckedByGuardClassMethod" Category="BestPractice.Robustnes" CheckId="SEM1001">
-    <Name>PublicMethodParametersMustBeCheckedByGuardClassMethod</Name>
-    <Description>All parameters of public members must be checked with a method of a guard class (that class must have the GuardClassAttribute)</Description>
-    <Url></Url>
-    <Resolution>The parameter {0} must be checked for a valid value.</Resolution>
-    <MessageLevel Certainty="95">Warning</MessageLevel>
-    <FixCategories>NonBreaking</FixCategories>
-    <Email />
-    <Owner />
-  </Rule>
   <Rule TypeName="ToStringMustNotBeCalledForStringObjects" Category="BestPractice.Performance" CheckId="SEM2001">
     <Name>ToStringMustNotBeCalledForStringObjects</Name>
     <Description>Calling the ToString-Method for a string does make no sense. It only generates memory stress by allocating a new buffer for the string.</Description>
     <Url></Url>
     <Resolution>Remove the call to "ToString()".</Resolution>
+    <MessageLevel Certainty="95">Warning</MessageLevel>
+    <FixCategories>NonBreaking</FixCategories>
+    <Email />
+    <Owner />
+  </Rule>
+  <Rule TypeName="ReturnValuesOfStringMethodsMustBeInterpreted" Category="BestPractice.Performance" CheckId="SEM2002">
+    <Name>ReturnValuesOfStringMethodsMustBeInterpreted</Name>
+    <Description>The return value of any String-Method must be processed by code.</Description>
+    <Url></Url>
+    <Resolution>Remove the call to the method, because it only produces a return value that is discarded.</Resolution>
     <MessageLevel Certainty="95">Warning</MessageLevel>
     <FixCategories>NonBreaking</FixCategories>
     <Email />
