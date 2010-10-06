@@ -28,9 +28,9 @@ namespace Sem.GenericTools.ProjectSettings
     /// </summary>
     internal class Program
     {
-        private const string escapedSemicolon = "{semicolon}";
+        private const string EscapedSemicolon = "{semicolon}";
 
-        private const string magicStringCompressed = "{compressed}";
+        private const string MagicStringCompressed = "{compressed}";
 
         /// <summary>
         /// contains the xpath selectors to extract project data
@@ -64,7 +64,7 @@ namespace Sem.GenericTools.ProjectSettings
                 { "release", @"'$(Configuration)|$(Platform)' == 'Release|AnyCPU'" },
                 { "documentation", @"'$(Configuration)|$(Platform)' == 'Documentation|AnyCPU'" },
                 { "ca-build", @"'$(Configuration)|$(Platform)' == 'Debug %28CodeAnalysis%29|AnyCPU'" },
-                { "ca build", @"'$(Configuration)|$(Platform)' == 'Debug %28Code Analysis%29|AnyCPU'" },
+                ////{ "ca build", @"'$(Configuration)|$(Platform)' == 'Debug %28Code Analysis%29|AnyCPU'" },
                 { "exclude non standard", @"'$(Configuration)|$(Platform)' == 'Exclude Non-Standard-Projects|AnyCPU'" },
             };
 
@@ -88,10 +88,15 @@ namespace Sem.GenericTools.ProjectSettings
                 Console.WriteLine("(C)opy project file settings to CSV file");
                 Console.WriteLine("(O)pen file in standard program for *.CSV");
                 Console.WriteLine("(W)rite settings from CSV to project files");
+                Console.WriteLine("------------------------------------------");
+                Console.WriteLine("(U)pdate Reference (to use dependencies instead of programs-folder)");
+                Console.WriteLine("(R)eference to CSV");
+                Console.WriteLine("(T) open Reference CSV File");
+                Console.WriteLine("------------------------------------------");
                 Console.WriteLine("(E)xit program");
                 
                 var input = (Console.ReadLine() ?? string.Empty).ToUpperInvariant();
-                if (Execute(rootFolderPath, input))
+                if (!Execute(rootFolderPath, input))
                 {
                     return;
                 }
@@ -110,8 +115,20 @@ namespace Sem.GenericTools.ProjectSettings
                     System.Diagnostics.Process.Start(Path.Combine(rootFolderPath, "projectsettings.csv"));
                     return true;
 
+                case "T":
+                    System.Diagnostics.Process.Start(Path.Combine(rootFolderPath, "projectreferences.csv"));
+                    return true;
+
                 case "W":
                     CopyCsvToProjectFiles(rootFolderPath);
+                    return true;
+
+                case "U":
+                    UpdateReferences(rootFolderPath);
+                    return true;
+
+                case "R":
+                    ReadReferences(rootFolderPath);
                     return true;
 
                 case "E":
@@ -119,6 +136,87 @@ namespace Sem.GenericTools.ProjectSettings
             }
 
             return true;
+        }
+
+        private static void UpdateReferences(string rootFolderPath)
+        {
+            foreach (var projectFile in Directory.GetFiles(rootFolderPath, "*.csproj", SearchOption.AllDirectories))
+            {
+                var projectSettings = GetProjectSettings(projectFile);
+                var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
+
+                var xmlNodeList = projectSettings.SelectNodes(@"//cs:Project/cs:ItemGroup/cs:Reference[starts-with(@Include,'Libra.')]", namespaceManager);
+                if (xmlNodeList != null)
+                {
+                    foreach (var node in xmlNodeList.Cast<XmlElement>().Where(node => node.ChildNodes.Count == 0))
+                    {
+                        node.AppendChild(node.OwnerDocument.CreateElement("SpecificVersion", NodeTools.MsbuildNamespace)).InnerText = "False";
+                        node.AppendChild(node.OwnerDocument.CreateElement("HintPath", NodeTools.MsbuildNamespace)).InnerText = @"..\Dependencies\" + node.Attributes[0].Value.Replace(", Version=3.4.804.11001, Culture=neutral, PublicKeyToken=e799e8c778d4ffc5, processorArchitecture=MSIL", ".dll");
+                    }
+                }
+
+                File.SetAttributes(projectFile, File.GetAttributes(projectFile) & ~FileAttributes.ReadOnly);
+                projectSettings.Save(projectFile);
+            }
+        }
+
+        private static void ReadReferences(string rootFolderPath)
+        {
+            var reflist = new List<ReferenceInformation>();
+            using (var outStream = new StreamWriter(Path.Combine(rootFolderPath, "projectreferences.csv")))
+            {
+                outStream.WriteLine("Project;Target;HintPath;SpecificVersion");
+
+                foreach (var projectFile in Directory.GetFiles(rootFolderPath, "*.csproj", SearchOption.AllDirectories))
+                {
+                    CopyReferenceData(rootFolderPath, outStream, projectFile, reflist, @"//cs:Project/cs:ItemGroup/cs:Reference");
+                    CopyReferenceData(rootFolderPath, outStream, projectFile, reflist, @"//cs:Project/cs:ItemGroup/cs:ProjectReference");
+                }
+
+                outStream.Close();
+            }
+        }
+
+        private static void CopyReferenceData(string rootFolderPath, TextWriter outStream, string projectFile, ICollection<ReferenceInformation> reflist, string selector)
+        {
+            var projectSettings = GetProjectSettings(projectFile);
+            var namespaceManager = NodeTools.CreateNamespaceManager(projectSettings.NameTable);
+
+            var xmlNodeList = projectSettings.SelectNodes(selector, namespaceManager);
+            if (xmlNodeList == null)
+            {
+                return;
+            }
+
+            foreach (XmlElement node in xmlNodeList)
+            {
+                var specificVersionNode = node.SelectSingleNode("cs:SpecificVersion", namespaceManager);
+                var hintPathNode = node.SelectSingleNode("cs:HintPath", namespaceManager);
+
+                var attributeNode = node.GetAttributeNode("Include");
+                var referenceInformation = new ReferenceInformation
+                    {
+                        Target = attributeNode == null ? string.Empty : attributeNode.InnerText,
+                        SpecificVersion = specificVersionNode == null
+                                              ? false
+                                              : bool.Parse(specificVersionNode.InnerText),
+                        HintPath = hintPathNode == null ? string.Empty : hintPathNode.InnerText,
+                        Project = projectFile,
+                    };
+
+                reflist.Add(referenceInformation);
+
+                var target = 
+                    referenceInformation.Target.Contains(",") 
+                        ? referenceInformation.Target.Substring(0, referenceInformation.Target.IndexOf(",")) 
+                        : referenceInformation.Target;
+
+                outStream.WriteLine(
+                    referenceInformation.Project.Replace(rootFolderPath, string.Empty) + ";" + 
+                    target + ";" +
+                    referenceInformation.HintPath.Replace(@"..\..\..\..\..\WIN2003\", @"..\..\..\..\WIN2003\") + ";" + 
+                    referenceInformation.SpecificVersion);
+            }
         }
 
         /// <summary>
@@ -242,16 +340,16 @@ namespace Sem.GenericTools.ProjectSettings
 
         private static string DecodeValueText(string valueText)
         {
-            valueText = valueText.Replace(escapedSemicolon, ";");
-            if (valueText.StartsWith(magicStringCompressed))
+            valueText = valueText.Replace(EscapedSemicolon, ";");
+            if (valueText.StartsWith(MagicStringCompressed))
             {
-                if (valueText.EndsWith(magicStringCompressed))
+                if (valueText.EndsWith(MagicStringCompressed))
                 {
                     valueText = Decompress(valueText.Substring(12, valueText.Length - 24));
                 }
             }
 
-            return valueText.Replace(escapedSemicolon, ";");
+            return valueText.Replace(EscapedSemicolon, ";");
         }
 
         /// <summary>
@@ -354,14 +452,14 @@ namespace Sem.GenericTools.ProjectSettings
                 {
                     if (!selector.Value.XPathSelector.Contains("{0}"))
                     {
-                        outStream.Write(selector.Key.Replace(";", escapedSemicolon));
+                        outStream.Write(selector.Key.Replace(";", EscapedSemicolon));
                         outStream.Write(";");
                     }
                     else
                     {
                         foreach (var config in ConfigurationConditions)
                         {
-                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", escapedSemicolon));
+                            outStream.Write((selector.Key + "..." + config.Key).Replace(";", EscapedSemicolon));
                             outStream.Write(";");
                         }
                     }
@@ -403,18 +501,18 @@ namespace Sem.GenericTools.ProjectSettings
         {
             var value = projectSettings.SelectSingleNode(selectorXPath, namespaceManager);
             var valueString = value != null ? value.InnerXml : string.Empty;
-            if (valueString.Replace(";", escapedSemicolon).Length > 200)
+            if (valueString.Replace(";", EscapedSemicolon).Length > 200)
             {
-                var isok = valueString == DecodeValueText(magicStringCompressed + Compress(valueString) + magicStringCompressed);
+                var isok = valueString == DecodeValueText(MagicStringCompressed + Compress(valueString) + MagicStringCompressed);
                 if (!isok)
                 {
                     throw new InvalidOperationException("the value  cannot be saved as a compressed string");
                 }
 
-                valueString = magicStringCompressed + Compress(valueString) + magicStringCompressed;
+                valueString = MagicStringCompressed + Compress(valueString) + MagicStringCompressed;
             }
 
-            valueString = valueString.Replace(";", escapedSemicolon);
+            valueString = valueString.Replace(";", EscapedSemicolon);
 
             outStream.Write(valueString);
             outStream.Write(";");

@@ -83,24 +83,6 @@ namespace Sem.GenericTools.CodeAnalysis.BestPractice
             return this.Problems;
         }
 
-#if DEBUG
-        /// <summary>
-        /// in case of the debug version we will pause after analyzing - this enables
-        /// us to have a look for the analysis result in the command line window
-        /// </summary>
-        public override void AfterAnalysis()
-        {
-            if (AppDomain.CurrentDomain.FriendlyName.ToUpperInvariant() == "FXCOPCMD.EXE")
-            {
-                // in case of FXCOPCMD.EXE being the executable, we may be debugging ...
-                Console.WriteLine("Press ENTER to continue.");
-                Console.ReadLine();
-            }
-
-            base.AfterAnalysis();
-        }
-#endif
-
         /// <summary>
         /// Analyzes the method for parameters that are checked correctly.
         /// </summary>

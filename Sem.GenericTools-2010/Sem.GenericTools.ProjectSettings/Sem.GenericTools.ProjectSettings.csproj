@@ -147,6 +147,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NodeDescription.cs" />
+    <Compile Include="ReferenceInformation.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDictionary Include="..\Shared\CustomDictionary.xml">
