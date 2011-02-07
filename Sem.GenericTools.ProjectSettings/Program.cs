@@ -74,7 +74,6 @@ namespace Sem.GenericTools.ProjectSettings
         public static void Main()
         {
             var rootFolderPath = AppDomain.CurrentDomain.BaseDirectory;
-            rootFolderPath = @"C:\CodePlex\SemSync\VS2010";
 
             var nameIndex = rootFolderPath.IndexOf(
                 Assembly.GetExecutingAssembly().GetName().Name, StringComparison.Ordinal);
